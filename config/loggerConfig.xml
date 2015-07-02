@@ -1,0 +1,12 @@
+<configuration>
+	<QLoggerFilter>
+		<name>PhoneHome</name>
+		<namePattern>*H*</namePattern>
+		<typePattern>Counter</typePattern>
+	</QLoggerFilter>
+	<QLoggerFilter>
+		<name>ElasticSearch</name>
+		<namePattern>*H*</namePattern>
+		<typePattern>Meter</typePattern>
+	</QLoggerFilter>
+</configuration>
