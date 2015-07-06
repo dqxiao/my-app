@@ -6,9 +6,12 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 //import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit;
 
 import org.javasimon.Counter;
 import org.javasimon.CounterSample;
+import org.javasimon.Meter;
+import org.javasimon.MeterSample;
 //import org.javasimon.Meter;
 //import org.javasimon.MeterSample;
 import org.javasimon.Split;
@@ -21,7 +24,7 @@ import org.javasimon.utils.SimonUtils;
 
 public class QLoggingCallback extends CallbackSkeleton {
 	
-	//private Map<String, LogTemplate<Meter>> meterLogTemplates=new HashMap<String, LogTemplate<Meter>>();
+	private Map<String, LogTemplate<Meter>> meterLogTemplates=new HashMap<String, LogTemplate<Meter>>();
 	private Map<String,LogTemplate<Counter>> counterLogTemplates=new HashMap<String, LogTemplate<Counter>>();
 	private Map<String,LogTemplate<Split>>  stopWatchLogTemplates=new HashMap<String, LogTemplate<Split>>();
 	private Map<String, QLoggerFilter> configuration;
@@ -51,16 +54,19 @@ public class QLoggingCallback extends CallbackSkeleton {
 	}
 	
 	private void registerLogTemplate(QLoggerFilter filter){
+		QLogger logger=new QLoggerImpl(new QLoggerConfig(filter.getName()));
+		
+		meterLogTemplates.put(filter.getName(), new QLogTemplate<Meter>(logger));
+		counterLogTemplates.put(filter.getName(), new QLogTemplate<Counter>(logger));
+		stopWatchLogTemplates.put(filter.getName(), new QLogTemplate<Split>(logger));
 		//meterLogTemplates.put(filter.getName(), new QLogTemplate<Meter>(new QLoggerConfig(filter.getName())));
-		counterLogTemplates.put(filter.getName(), new QLogTemplate<Counter>(new QLoggerConfig(filter.getName())));
-		stopWatchLogTemplates.put(filter.getName(), new QLogTemplate<Split>(new QLoggerConfig(filter.getName())));
+		//counterLogTemplates.put(filter.getName(), new QLogTemplate<Counter>(new QLoggerConfig(filter.getName())));
+		//stopWatchLogTemplates.put(filter.getName(), new QLogTemplate<Split>(new QLoggerConfig(filter.getName())));
 	}
 	
 	
 	private void clear(){
 		configuration=new LinkedHashMap<String, QLoggerFilter>();
-		
-		
 	}
 	
 	
@@ -103,44 +109,44 @@ public class QLoggingCallback extends CallbackSkeleton {
 	
 	
 	
-//	private final LogMessageSource<Meter> meterLogMessageSource = new LogMessageSource<Meter>() {
-//		public String getLogMessage(Meter meter){
-//			String TYPE="Meter";
-//			String basicInfo=String.format("type=%s,name=%s", 
-//					TYPE,meter.getName());
-//			
-//			String contentInfo=String.format("rate=%s,PeakRate=%s,MeanRate=%s",
-//					MeterUtil.presentRate(meter.getOneMinuteRate(),TimeUnit.SECONDS),
-//					MeterUtil.presentRate(meter.getPeakRate(),TimeUnit.SECONDS),
-//					MeterUtil.presentRate(meter.getMeanRate(),TimeUnit.SECONDS)
-//					);
-//			
-//			return basicInfo+contentInfo;
-//		}
-//	};
+	private final LogMessageSource<Meter> meterLogMessageSource = new LogMessageSource<Meter>() {
+		public String getLogMessage(Meter meter){
+			String TYPE="Meter";
+			String basicInfo=String.format("type=%s,name=%s", 
+					TYPE,meter.getName());
+			
+			String contentInfo=String.format("rate=%s,PeakRate=%s,MeanRate=%s",
+					MeterUtil.presentRate(meter.getOneMinuteRate(),TimeUnit.SECONDS),
+					MeterUtil.presentRate(meter.getPeakRate(),TimeUnit.SECONDS),
+					MeterUtil.presentRate(meter.getMeanRate(),TimeUnit.SECONDS)
+					);
+			
+			return basicInfo+contentInfo;
+		}
+	};
 	
 	
 	private Collection<LogTemplate<Split>> getStopwatchLogTemplates(Stopwatch stopwatch){
-		System.out.printf("Find out accepted\n");
+		//System.out.printf("Find out accepted\n");
 		Collection<LogTemplate<Split>> result=new ArrayList<LogTemplate<Split>>();
 		for(String name: configuration.keySet()){
 			if(configuration.get(name).accepted(stopwatch)){
-				System.out.printf("Accpted\n");
+				//System.out.printf("Accpted\n");
 				result.add(stopWatchLogTemplates.get(name));
 			}
 		}
 		return result;
 	}
 
-//	private Collection<LogTemplate<Meter>> getMeterLogTemplates(Meter meter){
-//		Collection<LogTemplate<Meter>> result=new ArrayList<LogTemplate<Meter>>();
-//		for(String name: configuration.keySet()){
-//			if(configuration.get(name).accepted(meter)){
-//				result.add(meterLogTemplates.get(name));
-//			}
-//		}
-//		return result;
-//	}
+	private Collection<LogTemplate<Meter>> getMeterLogTemplates(Meter meter){
+		Collection<LogTemplate<Meter>> result=new ArrayList<LogTemplate<Meter>>();
+		for(String name: configuration.keySet()){
+			if(configuration.get(name).accepted(meter)){
+				result.add(meterLogTemplates.get(name));
+			}
+		}
+		return result;
+	}
 	
 	private Collection<LogTemplate<Counter>> getCounterLogTemplates(Counter counter){
 		Collection<LogTemplate<Counter>> result=new ArrayList<LogTemplate<Counter>>();
@@ -163,17 +169,15 @@ public class QLoggingCallback extends CallbackSkeleton {
 	}
 	
 	
-//	@Override
-//	public void onMeterIncrease(Meter meter, long inc, MeterSample sample){
-//		
-//		for(LogTemplate<Meter> logTemplate: getMeterLogTemplates(meter)){
-//			logTemplate.log(meter, meterLogMessageSource);
-//		}
-//	}
+	@Override
+	public void onMeterIncrease(Meter meter, long inc, MeterSample sample){
+		for(LogTemplate<Meter> logTemplate: getMeterLogTemplates(meter)){
+			logTemplate.log(meter, meterLogMessageSource);
+		}
+	}
 	
 	@Override
 	public void onCounterIncrease(Counter counter, long inc, CounterSample sample){
-		//System.out.printf("Counter Increase \n");
 		for(LogTemplate<Counter> logTemplate: getCounterLogTemplates(counter)){
 			logTemplate.log(counter, counterLogMessageSource);
 		}

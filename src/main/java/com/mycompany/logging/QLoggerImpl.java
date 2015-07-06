@@ -44,6 +44,7 @@ public class QLoggerImpl implements QLogger {
 	}
 
 	public void send(String message){
+		System.out.printf("message:%s\n", message);
 		if(bigQueue!=null){
 			try{
 				bigQueue.enqueue(message.getBytes());

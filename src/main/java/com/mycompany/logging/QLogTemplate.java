@@ -10,9 +10,17 @@ public class QLogTemplate<C> extends  LogTemplate<C> {
 		this(new QLoggerConfig());
 	}
 	
-	public QLogTemplate(QLoggerConfig config){
+	private QLogTemplate(QLoggerConfig config){
 		this.logger=new QLoggerImpl(config);
 	}
+	
+	
+	public QLogTemplate(QLogger logger){
+		this.logger=logger;
+	} 
+	
+	
+	
 	
 	
 	@Override
