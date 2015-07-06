@@ -5,15 +5,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-//import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeUnit;
 
 import org.javasimon.Counter;
 import org.javasimon.CounterSample;
 import org.javasimon.Meter;
 import org.javasimon.MeterSample;
-//import org.javasimon.Meter;
-//import org.javasimon.MeterSample;
 import org.javasimon.Split;
 import org.javasimon.Stopwatch;
 import org.javasimon.StopwatchSample;
@@ -21,7 +18,12 @@ import org.javasimon.callback.CallbackSkeleton;
 import org.javasimon.callback.logging.LogMessageSource;
 import org.javasimon.callback.logging.LogTemplate;
 import org.javasimon.utils.SimonUtils;
-
+import com.mycompany.util.MeterUtil;
+/**
+ * Logging a set of callback triggered by metric monitors  
+ * @author xiaod
+ *
+ */
 public class QLoggingCallback extends CallbackSkeleton {
 	
 	private Map<String, LogTemplate<Meter>> meterLogTemplates=new HashMap<String, LogTemplate<Meter>>();
@@ -59,9 +61,6 @@ public class QLoggingCallback extends CallbackSkeleton {
 		meterLogTemplates.put(filter.getName(), new QLogTemplate<Meter>(logger));
 		counterLogTemplates.put(filter.getName(), new QLogTemplate<Counter>(logger));
 		stopWatchLogTemplates.put(filter.getName(), new QLogTemplate<Split>(logger));
-		//meterLogTemplates.put(filter.getName(), new QLogTemplate<Meter>(new QLoggerConfig(filter.getName())));
-		//counterLogTemplates.put(filter.getName(), new QLogTemplate<Counter>(new QLoggerConfig(filter.getName())));
-		//stopWatchLogTemplates.put(filter.getName(), new QLogTemplate<Split>(new QLoggerConfig(filter.getName())));
 	}
 	
 	
@@ -127,11 +126,9 @@ public class QLoggingCallback extends CallbackSkeleton {
 	
 	
 	private Collection<LogTemplate<Split>> getStopwatchLogTemplates(Stopwatch stopwatch){
-		//System.out.printf("Find out accepted\n");
 		Collection<LogTemplate<Split>> result=new ArrayList<LogTemplate<Split>>();
 		for(String name: configuration.keySet()){
 			if(configuration.get(name).accepted(stopwatch)){
-				//System.out.printf("Accpted\n");
 				result.add(stopWatchLogTemplates.get(name));
 			}
 		}

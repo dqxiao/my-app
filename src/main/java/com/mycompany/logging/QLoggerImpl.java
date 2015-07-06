@@ -7,7 +7,11 @@ import com.leansoft.bigqueue.IBigQueue;
 import com.mycompany.logging.QLoggerConfig;
 import com.mycompany.logging.QLogger;
 
-
+/**
+ * Implementation of QLogger 
+ * @author xiaod
+ *
+ */
 public class QLoggerImpl implements QLogger {
 	
 	private IBigQueue bigQueue=null;
@@ -38,13 +42,11 @@ public class QLoggerImpl implements QLogger {
 		try{
 			bigQueue = new BigQueueImpl(loggerConfig.getQueueDir(),loggerConfig.getQueueName());
 		}catch(Exception e){
-			//System.out.println("can't start the service");
 			System.out.println(STATUS.FAIL+"to"+EVENT.START);
 		}
 	}
 
 	public void send(String message){
-		System.out.printf("message:%s\n", message);
 		if(bigQueue!=null){
 			try{
 				bigQueue.enqueue(message.getBytes());

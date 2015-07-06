@@ -1,5 +1,11 @@
 package com.mycompany.logging;
-
+/**
+ * QLoggerConfig. Configuration about message buffer 
+ * QueueDir 
+ * QueueName
+ * @author xiaod
+ *
+ */
 public class QLoggerConfig {
 	
 	private String queueName;

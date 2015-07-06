@@ -13,6 +13,12 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+
+/**
+ * ConfigurationReader in XML 
+ * @author xiaod
+ *
+ */
 public class XMLConfigurationReader implements ConfigurationReader{
 
 	private Document doc=null;
@@ -55,7 +61,7 @@ public class XMLConfigurationReader implements ConfigurationReader{
 					try{
 						filter.getClass().getMethod(setterName(fieldName), String.class).invoke(filter, fieldValue);
 					}catch(Exception e){
-						//System.out.printf("", args)
+						//
 					}
 				}
 			}

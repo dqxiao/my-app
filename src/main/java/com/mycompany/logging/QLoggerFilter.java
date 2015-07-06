@@ -3,9 +3,14 @@ package com.mycompany.logging;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.javasimon.Simon;
 
+/**
+ * QLoggerFilter
+ * Expression whether metric data should be logged or not 
+ * @author xiaod
+ *
+ */
 public class QLoggerFilter {
 	
 	private String name;
@@ -18,6 +23,7 @@ public class QLoggerFilter {
 	private List<String> namePatterns=new ArrayList<String>();
 	private List<String> typePatterns=new ArrayList<String>();
 
+	
 	
 	public boolean isMatch(String s, String p) {  
         int i = 0;  

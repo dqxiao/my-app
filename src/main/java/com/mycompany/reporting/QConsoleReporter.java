@@ -7,8 +7,9 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import com.mycompany.logging.QLoggerConfig;
+import com.mycompany.util.ScheduleService;
 
-public class QConsoleReporter extends QScheduleReporter {
+public class QConsoleReporter extends ScheduleService {
 	
 
 	private final PrintStream output;
@@ -71,11 +72,9 @@ public class QConsoleReporter extends QScheduleReporter {
 		  }
 	 }
 	
-
 	@Override
 	public void reportMessage() {
 		// TODO Auto-generated method stub
-		System.out.println("QConsole report\n");
 		 for(String message: qPoller.read()){
 			 System.out.println(message);
 		 }

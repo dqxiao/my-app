@@ -40,7 +40,7 @@ public class App
 //    		System.out.println(filter.toString());
 //    	}
     	//System.out.printf("HelloWorld %s \n", "Code");
-    	//startreport();
+    	startreport();
     	Counter counter=SimonManager.getCounter("HellWorld-Counter");
     	Meter meter=SimonManager.getMeter("HelloWorld-Meter");
     	
@@ -55,16 +55,18 @@ public class App
 //				}
 //			}
 		);
-    	
-    	//System.out.printf("Second%d\n",TimeUnit.SECONDS.toNanos(5L));
-    	
-		
+//    	
+//    	//System.out.printf("Second%d\n",TimeUnit.SECONDS.toNanos(5L));
+//    	
+//		
 		
     
     	
     	for(int i=0;i<11;i++){
     		//counter.increase();
     		meter.mark(i*1000);
+    		
+    		
     		
     		try {
 				Thread.sleep(1000);
