@@ -27,7 +27,7 @@ public class HellWorld {
 //		);
 		
 		startreport();
-		SimonManager.callback().addCallback(new QLoggingCallback());
+		//SimonManager.callback().addCallback(new QLoggingCallback());
 //		Meter meter=SimonManager.getMeter("HelloWorld-Meter");
 		Counter counter=SimonManager.getCounter("HelloWorld-Counter");
 		for(int i=0;i<10;i++){

@@ -15,55 +15,54 @@ import com.mycompany.logging.QLoggerConfig;
 //import com.mycompany.logging.MeterUtil;
 
 import com.mycompany.logging.QLoggerFilter;
+import com.mycompany.logging.QLogging;
 import com.mycompany.logging.QLoggingCallback;
-import com.mycompany.logging.XMLConfigurationReader;
+import com.mycompany.management.LogReportManager;
 import com.mycompany.reporting.QConsoleReporter;
+import com.mycompany.util.XMLConfigurationReader;
 
 public class App 
 {
-	static void startreport(){
-		QConsoleReporter reporter=QConsoleReporter.forSimMonager()
-				.convertDurationsTo(TimeUnit.MILLISECONDS)
-				.setConfig(new QLoggerConfig("./Metric/report", "PhoneHome"))
-				.build();
-		
-		reporter.start(1, TimeUnit.SECONDS);
-	
-	}
+//	static void startreport(){
+//		QConsoleReporter reporter=QConsoleReporter.forSimMonager()
+//				.convertDurationsTo(TimeUnit.MILLISECONDS)
+//				.setConfig(new QLoggerConfig("./Metric/report", "PhoneHome"))
+//				.build();
+//		
+//		reporter.start(1, TimeUnit.SECONDS);
+//	
+//	}
+//	
+//	static void startLogging(){
+//		QLogging logging=QLogging.forSimonManager(SimonManager.manager())
+//				.convertDurationsTo(TimeUnit.MILLISECONDS)
+//				.readConfig("./config/loggerConfig.xml")
+//				.build();
+//		
+//		logging.start(2, TimeUnit.SECONDS);
+//	}
 	
     public static void main( String[] args )
     {
       
-    	String DEFAULT_CONFIG_FILE="./config/loggerConfig.xml";
-    	
+//    	String DEFAULT_CONFIG_FILE="./config/loggerConfig.xml";
+//    	
 //    	for(QLoggerFilter filter: new XMLConfigurationReader(DEFAULT_CONFIG_FILE).getLoggerFilter()){
 //    		System.out.println(filter.toString());
 //    	}
-    	//System.out.printf("HelloWorld %s \n", "Code");
-    	startreport();
+//    	//System.out.printf("HelloWorld %s \n", "Code");
+//    	//startreport();
+////    	startLogging();
+    	
+    	LogReportManager manager=new LogReportManager();
+    	manager.start();
     	Counter counter=SimonManager.getCounter("HellWorld-Counter");
     	Meter meter=SimonManager.getMeter("HelloWorld-Meter");
     	
-		SimonManager.callback().addCallback(
-				new QLoggingCallback()
-//			new CallbackSkeleton(){
-//				public void onMeterIncrease(Meter meter, long inc, MeterSample sample){
-//					System.out.printf("meter-increase:%s \n", meter.toString());
-//				}
-//				public void onCounterIncrease(Counter counter, long inc, CounterSample sample){
-//					System.out.printf("Counter-Increase\n");
-//				}
-//			}
-		);
-//    	
-//    	//System.out.printf("Second%d\n",TimeUnit.SECONDS.toNanos(5L));
-//    	
-//		
-		
     
     	
     	for(int i=0;i<11;i++){
-    		//counter.increase();
+    		counter.increase();
     		meter.mark(i*1000);
     		
     		

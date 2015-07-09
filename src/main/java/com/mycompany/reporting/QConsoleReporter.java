@@ -1,5 +1,6 @@
 package com.mycompany.reporting;
 
+import java.io.IOException;
 import java.io.PrintStream;
 //import java.nio.file.attribute.AclEntry.Builder;
 import java.util.Locale;
@@ -7,6 +8,7 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import com.mycompany.logging.QLoggerConfig;
+import com.mycompany.util.Message;
 import com.mycompany.util.ScheduleService;
 
 public class QConsoleReporter extends ScheduleService {
@@ -75,9 +77,10 @@ public class QConsoleReporter extends ScheduleService {
 	@Override
 	public void reportMessage() {
 		// TODO Auto-generated method stub
-		 for(String message: qPoller.read()){
-			 System.out.println(message);
-		 }
+	
+		for(Message message: qPoller.readStream()){
+				 System.out.println(message.getContent());
+		}
 		 System.out.println("*******");
 		
 	}

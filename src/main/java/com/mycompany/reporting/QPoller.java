@@ -1,12 +1,17 @@
 package com.mycompany.reporting;
 
+import java.io.IOException;
 //import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
 import com.leansoft.bigqueue.BigQueueImpl;
+import com.leansoft.bigqueue.FanOutQueueImpl;
 import com.leansoft.bigqueue.IBigQueue;
+import com.leansoft.bigqueue.IFanOutQueue;
 import com.mycompany.logging.QLoggerConfig;
+import com.mycompany.util.Message;
+import com.mycompany.util.NameExpr;
 
 
 public class QPoller {
@@ -14,7 +19,7 @@ public class QPoller {
 	private int batchSize;
 	private boolean batch=false;
 	private QLoggerConfig config;
-	private IBigQueue messageBuffer=null;
+	private IFanOutQueue messageBuffer=null;
 	private boolean connected=false;
 	
 	
@@ -35,8 +40,7 @@ public class QPoller {
 	 */
 	public void start(){
 		try{
-			messageBuffer= new BigQueueImpl(config.getQueueDir(),config.getQueueName());
-			//System.out.printf("connect to local messageBuffer:%s\n",config.get);
+			messageBuffer= new FanOutQueueImpl(config.getQueueDir(),config.getQueueName());
 			connected=true;
 		}catch(Exception e){
 			System.out.printf("Not conected\n");
@@ -44,10 +48,17 @@ public class QPoller {
 		
 	}
 	
-	private void readChunkMessage(int number, Collection<String> messages) {
+	
+	private void readChunkMessage(int number, Collection<Message> result,String fanoutID) {
 		try{
 			for(int i=0;i<number;i++){
-				messages.add(new String(messageBuffer.dequeue()));
+				byte[] b=messageBuffer.dequeue(fanoutID);
+				String item=new String(b, "ISO-8859-1");
+				Message mItem=new Message(item);
+				result.add(mItem);
+				if(messageBuffer.isEmpty(fanoutID)){
+					break;
+				}
 			}
 			// logging issue 
 		}catch(Exception e){
@@ -55,22 +66,62 @@ public class QPoller {
 		}
 	}
 	
-	public Collection<String> read(){
-		Collection<String> messages=new ArrayList<String>();
+	public Collection<Message> readStream(){
 		this.start();
-		
-		if(connected){
-			int maxSize=(int) messageBuffer.size();
-			if(batch){
-				if(maxSize>batchSize){
-					readChunkMessage(batchSize, messages);
+		String fanoutID="allKind";
+		Collection<Message> result=new ArrayList<Message>();
+		try{
+			if(connected){
+				int maxSize=(int) messageBuffer.size();
+				//System.out.printf("maxSize:%d\n",maxSize);
+				if(batch){
+					if(maxSize>batchSize){
+						readChunkMessage(batchSize, result,fanoutID);
+					}
+				}else{
+					readChunkMessage(maxSize, result,fanoutID);
 				}
-			}else{
-				readChunkMessage(maxSize, messages);
 			}
+		}catch(Exception e){
+			
+		}
+		return result;
+	}
+	
+	
+	private void readChunkMessageMetric(int number, Collection<Message> result,String fanoutID){
+		NameExpr nameExpr=new NameExpr(fanoutID);
+		int count=0;
+		try{
+			while(!messageBuffer.isEmpty(fanoutID)){
+//				String item=new String(messageBuffer.dequeue(fanoutID));
+				//String item=messageBuffer.dequeue(fanoutID).toString();
+				byte[] b=messageBuffer.dequeue(fanoutID);
+				String item=new String(b, "ISO-8859-1");
+				Message mItem=new Message(item);
+				if(nameExpr.acceptName(mItem.getAttr("name"))){
+					count+=1;
+					result.add(mItem);
+				}
+			}
+		}catch(IOException e){
+			
 		}
 		
-		return messages;
+	}
+	
+	
+	
+	/**
+	 * fetch all message matching name pattern now 
+	 * @param namePattern
+	 * @return
+	 */
+	public Collection<Message> readMetric(String namePattern){
+		this.start();
+		Collection<Message> result=new ArrayList<Message>();
+		readChunkMessageMetric(batchSize,result,namePattern);
+		return result;
 	}
 	
 	public void setBatchSize(int batchSize){

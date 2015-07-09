@@ -1,4 +1,4 @@
-package com.mycompany.logging;
+package com.mycompany.util;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -12,6 +12,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import com.mycompany.logging.QLoggerFilter;
 
 
 /**
@@ -61,17 +63,14 @@ public class XMLConfigurationReader implements ConfigurationReader{
 					try{
 						filter.getClass().getMethod(setterName(fieldName), String.class).invoke(filter, fieldValue);
 					}catch(Exception e){
-						//
+						// Logger this information 
 					}
 				}
 			}
-			
-			
 			qLoggerFilters.add(filter);
 		}
 		
 		return qLoggerFilters;
-		
 	}
 	
 	private String setterName(String name) {

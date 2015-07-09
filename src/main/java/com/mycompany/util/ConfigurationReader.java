@@ -1,4 +1,4 @@
-package com.mycompany.logging;
+package com.mycompany.util;
 /**
  * 
  * @author xiaod

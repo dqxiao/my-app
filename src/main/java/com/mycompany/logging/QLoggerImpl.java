@@ -2,8 +2,9 @@ package com.mycompany.logging;
 
 
 
-import com.leansoft.bigqueue.BigQueueImpl;
-import com.leansoft.bigqueue.IBigQueue;
+//import com.leansoft.bigqueue.BigQueueImpl;
+import com.leansoft.bigqueue.FanOutQueueImpl;
+//import com.leansoft.bigqueue.IBigQueue;
 import com.mycompany.logging.QLoggerConfig;
 import com.mycompany.logging.QLogger;
 
@@ -14,7 +15,8 @@ import com.mycompany.logging.QLogger;
  */
 public class QLoggerImpl implements QLogger {
 	
-	private IBigQueue bigQueue=null;
+	private FanOutQueueImpl bigQueue=null;
+	
 	private QLoggerConfig loggerConfig;
 	
 	private enum EVENT{
@@ -40,7 +42,7 @@ public class QLoggerImpl implements QLogger {
 
 	public void start(){
 		try{
-			bigQueue = new BigQueueImpl(loggerConfig.getQueueDir(),loggerConfig.getQueueName());
+			bigQueue =new FanOutQueueImpl(loggerConfig.getQueueDir(),loggerConfig.getQueueName());
 		}catch(Exception e){
 			System.out.println(STATUS.FAIL+"to"+EVENT.START);
 		}
@@ -49,7 +51,8 @@ public class QLoggerImpl implements QLogger {
 	public void send(String message){
 		if(bigQueue!=null){
 			try{
-				bigQueue.enqueue(message.getBytes());
+				byte b[] = message.getBytes("ISO-8859-1"); 
+				bigQueue.enqueue(b);
 			}catch(Exception e){
 				System.out.println(STATUS.FAIL+"to"+EVENT.SEND);
 			}
