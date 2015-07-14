@@ -2,14 +2,12 @@ package com.mycompany.logging;
 
 
 
-//import com.leansoft.bigqueue.BigQueueImpl;
 import com.leansoft.bigqueue.FanOutQueueImpl;
-//import com.leansoft.bigqueue.IBigQueue;
 import com.mycompany.logging.QLoggerConfig;
 import com.mycompany.logging.QLogger;
 
 /**
- * Implementation of QLogger 
+ * QloggerImpl 
  * @author xiaod
  *
  */
@@ -35,11 +33,10 @@ public class QLoggerImpl implements QLogger {
 	
 	public QLoggerImpl(QLoggerConfig config){
 		this.loggerConfig=config;
-		this.start();
 	}
 
 	
-
+	
 	public void start(){
 		try{
 			bigQueue =new FanOutQueueImpl(loggerConfig.getQueueDir(),loggerConfig.getQueueName());

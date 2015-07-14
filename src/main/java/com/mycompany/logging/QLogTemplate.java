@@ -2,43 +2,49 @@ package com.mycompany.logging;
 import org.javasimon.callback.logging.LogTemplate;
 
 
-public class QLogTemplate<C> extends  LogTemplate<C> {
+/**
+ * A logging template allows us to customize the logging behavior of different metric collector 
+ * @author xiaod
+ *
+ * @param <C>
+ */
+public  class QLogTemplate<C> extends  LogTemplate<C> {
 
-	private final QLogger logger;
+	private QLogger logger;
 	
-	public QLogTemplate() {
-		this(new QLoggerConfig());
+	
+	public QLogTemplate(){
+		this.logger=null;
 	}
-	
-	private QLogTemplate(QLoggerConfig config){
-		this.logger=new QLoggerImpl(config);
-	}
-	
 	
 	public QLogTemplate(QLogger logger){
 		this.logger=logger;
 	} 
 	
+	public QLogger getQLogger(){
+		return this.logger;
+	}
 	
+	public void setQLogger(QLogger logger){
+		this.logger=logger;
+	}
 	
-	
+	//public QLogTemplate<C> 
 	
 	@Override
-	protected boolean isEnabled(C arg0) {
-		// TODO Auto-generated method stub
+	protected boolean isEnabled(C context) {
 		return true;
 	}
 
 	@Override
 	protected void log(String message) {
-		logger.send(message);
+		//System.out.print("try to send\n");
+		if(logger!=null){
+			logger.send(message);
+		}else{
+			System.out.printf("ERROR:", "logging using null logger \n");
+		}
 	}
 
-	public QLogger getQLogger(){
-		return logger;
-	}
-	
-	
-	
-	
+
 }

@@ -1,4 +1,7 @@
 package com.mycompany.logging;
+
+
+
 /**
  * QLoggerConfig. Configuration about message buffer 
  * QueueDir 
@@ -49,4 +52,16 @@ public class QLoggerConfig {
 	public void setQueueName(String queueName) {
 		this.queueName=queueName;
 	}
+	
+	@Override public boolean equals(Object other) {
+	    boolean result = false;
+	    if(other instanceof QLoggerConfig){
+	    	QLoggerConfig that=(QLoggerConfig) other;
+	    	if(that.getQueueDir().equals(queueDir) && that.getQueueName().equals(queueName)){
+	    		result=true;
+	    	}
+	    }
+	    return result;
+	}
+
 }

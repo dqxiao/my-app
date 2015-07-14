@@ -1,3 +1,6 @@
+/**
+ * 
+ */
 package com.mycompany.logging;
 
 /**
@@ -21,6 +24,11 @@ public interface QLogger {
 	 * propagate work flow information to metric manager 
 	 */
 	public void info();
+	
+	/**
+	 * 
+	 */
+	public void start();
 
 	/**
 	 * stop working 

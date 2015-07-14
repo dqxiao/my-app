@@ -2,7 +2,11 @@ package com.mycompany.util;
 
 import org.javasimon.Simon;
 
-
+/**
+ * 
+ * @author xiaod
+ *
+ */
 public final class NameExpr extends Expr {
 
 	public NameExpr(String pattern) {

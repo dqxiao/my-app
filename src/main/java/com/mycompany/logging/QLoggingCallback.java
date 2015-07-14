@@ -1,198 +1,221 @@
 package com.mycompany.logging;
 
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
+
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+
 
 import org.javasimon.Counter;
 import org.javasimon.CounterSample;
 import org.javasimon.Meter;
 import org.javasimon.MeterSample;
+import org.javasimon.Simon;
 import org.javasimon.Split;
 import org.javasimon.Stopwatch;
 import org.javasimon.StopwatchSample;
 import org.javasimon.callback.CallbackSkeleton;
-import org.javasimon.callback.logging.LogMessageSource;
 import org.javasimon.callback.logging.LogTemplate;
-import org.javasimon.utils.SimonUtils;
-import org.omg.CosNaming.NamingContextExtPackage.StringNameHelper;
 
-import com.mycompany.util.Message;
-import com.mycompany.util.MeterUtil;
+import com.mycompany.util.LoggingMessageSourceFactory;
+
 /**
  * Logging a set of callback triggered by metric monitors  
  * @author xiaod
- *
+ *  
  */
 public class QLoggingCallback extends CallbackSkeleton {
 	
-	private Map<String, LogTemplate<Meter>> meterLogTemplates=new HashMap<String, LogTemplate<Meter>>();
-	private Map<String,LogTemplate<Counter>> counterLogTemplates=new HashMap<String, LogTemplate<Counter>>();
-	private Map<String,LogTemplate<Split>>  stopWatchLogTemplates=new HashMap<String, LogTemplate<Split>>();
-	private Map<String, QLoggerFilter> configuration;
+	private Map<QLoggerFilter,QLogger> filterLoggers;
 	
+	private Map<QLoggerFilter,QLogTemplate<Counter>> couterTemplates;
 	
+	@SuppressWarnings("unused")
+	private Map<QLoggerFilter,QLogTemplate<Meter>> meterTemplates;
 	
-	public QLoggingCallback(Collection<QLoggerFilter> qLoggerFilters){
+	@SuppressWarnings("unused")
+	private Map<QLoggerFilter,QLogTemplate<Split>> stopWatchTemplates;
+	 
+	
+	public QLoggingCallback(){
 		clear();
-		for(QLoggerFilter filter:qLoggerFilters){
-			//System.out.printf("filter:%s \n",filter.toString());
-			registerByQLoggerFiler(filter);
-		}
+	}
+	
+	public QLoggingCallback(Collection<QLoggerFilter> filters, Collection<QLogTemplateConfig> configs){
+		System.out.printf("init\n");
+		clear();
+		reigsterLoggers(filters);
+		registerTemplates(configs);
 	}
 	
 	
-	
-	private void registerByQLoggerFiler(QLoggerFilter filter){
-		if(!configuration.containsKey(filter.getName())){
-			configuration.put(filter.getName(),filter);
-			registerLogTemplate(filter);
-		}else{
-			// remove old 
-		}
-	}
-	
-	
-	
-	
-	private void registerLogTemplate(QLoggerFilter filter){
-		QLogger logger=new QLoggerImpl(new QLoggerConfig(filter.getName()));
-		
-		meterLogTemplates.put(filter.getName(), new QLogTemplate<Meter>(logger));
-		counterLogTemplates.put(filter.getName(), new QLogTemplate<Counter>(logger));
-		stopWatchLogTemplates.put(filter.getName(), new QLogTemplate<Split>(logger));
-	}
-	
-	
-	private void clear(){
-		configuration=new LinkedHashMap<String, QLoggerFilter>();
-	}
-	
-	
-	
-	
-	
-	/**Split to string converter*/
-	private final LogMessageSource<Split>  stopwatchLogMessageSource = new LogMessageSource<Split>() {
-		public String getLogMessage(Split split){
-			String TYPE="StopWatch";
-			Message message=new Message();
-			//
-			message.withInfo("timestamp", SimonUtils.presentTimestamp(System.currentTimeMillis()));
-			message.withInfo("type", TYPE);
-			message.withInfo("name", split.getStopwatch().getName());
+	 
+	private void registerTemplates(Collection<QLogTemplateConfig> configs) {
+		for(QLogTemplateConfig config:configs){
+			long period=(long) config.getDurationFactor();
+			QLogTemplate<Counter> counterLogTemplate=new QLogTemplate<Counter>();
+			QLogTemplate<Meter> meterLogTemplate=new QLogTemplate<Meter>();
+			QLogTemplate<Split> splitLogTemplate=new QLogTemplate<Split>();
 			
-			// 
-			message.withInfo("duration",SimonUtils.presentNanoTime(split.runningFor()));
-			return message.toString();
-		}
-	};
-	
-	private final LogMessageSource<Counter>  counterLogMessageSource = new LogMessageSource<Counter>() {
-		public String getLogMessage(Counter counter){
-			String TYPE="Counter";
-			Message message=new Message();
-			
-			// basic information 
-			message.withInfo("timestamp", SimonUtils.presentTimestamp(System.currentTimeMillis()));
-			message.withInfo("type", TYPE);
-			message.withInfo("name", counter.getName());
-			
-			// detailed information 
-			message.withInfo("count", SimonUtils.presentMinMaxCount(counter.getCounter()));
-			return message.toString();
-		}
-	};
-	
-	
-	
-	private final LogMessageSource<Meter> meterLogMessageSource = new LogMessageSource<Meter>() {
-		public String getLogMessage(Meter meter){
-			String TYPE="Meter";
-			Message message=new Message();
-			
-			// basic information 
-			message.withInfo("timestamp", SimonUtils.presentTimestamp(System.currentTimeMillis()));
-			message.withInfo("type", TYPE);
-			message.withInfo("name", meter.getName());
-			
-			// detailed information 
-			message.withInfo("rate", MeterUtil.presentRate(meter.getOneMinuteRate(), TimeUnit.SECONDS));
-			message.withInfo("peakRate", MeterUtil.presentRate(meter.getPeakRate(), TimeUnit.SECONDS));
-			return message.toString();
-		}
-	};
-	
-	
-	private Collection<LogTemplate<Split>> getStopwatchLogTemplates(Stopwatch stopwatch){
-		Collection<LogTemplate<Split>> result=new ArrayList<LogTemplate<Split>>();
-		for(String name: configuration.keySet()){
-			if(configuration.get(name).accept(stopwatch)){
-				result.add(stopWatchLogTemplates.get(name));
+			QLoggerFilter filter=new QLoggerFilter();
+			filter.setNamePattern(config.getNamePattern());
+			filter.setTypePattern(config.getTypePattern());
+			if(period!=0){
+				couterTemplates.put(filter, new QPeriodicLogTemplate<Counter>(counterLogTemplate, period));
+				meterTemplates.put(filter,new QPeriodicLogTemplate<>(meterLogTemplate, period));
+				stopWatchTemplates.put(filter, new QPeriodicLogTemplate<>(splitLogTemplate, period));
+				
+			}else{
+				couterTemplates.put(filter, counterLogTemplate);
+				meterTemplates.put(filter,meterLogTemplate);
+				stopWatchTemplates.put(filter, splitLogTemplate);
 			}
 		}
+		
+	}
+
+	private void reigsterLoggers(Collection<QLoggerFilter> filters) {
+		for(QLoggerFilter filter:filters){
+			QLogger logger=new QLoggerImpl(new QLoggerConfig(filter.getName()));
+			// unique logger as producer of message buffer 
+			logger.start();
+			filterLoggers.put(filter, logger);
+		}
+		
+		
+	}
+
+	private void clear(){
+		filterLoggers=new HashMap<QLoggerFilter,QLogger>();
+		couterTemplates=new HashMap<QLoggerFilter,QLogTemplate<Counter>>();
+		meterTemplates=new HashMap<QLoggerFilter,QLogTemplate<Meter>>();
+		stopWatchTemplates=new HashMap<QLoggerFilter,QLogTemplate<Split>>();
+	}
+	
+	
+	
+	
+	
+
+	
+	private  Collection<QLogTemplate<Meter>> getMeterLogTemplates(Meter meter) {
+		Collection<QLogTemplate<Meter>> result=new ArrayList<QLogTemplate<Meter>>();
+		Collection<QLogger> loggers=new ArrayList<QLogger>();
+		getLoggers(meter, loggers);
+		//System.out.printf("logger size:%d\n", loggers.size());
+		
+		for(QLoggerFilter filter: meterTemplates.keySet()){
+			if(filter.accept(meter)){
+				QLogTemplate<Meter> logTemplate=meterTemplates.get(filter);
+				if(logTemplate instanceof QDelegatedLogTemplate<?>){
+					for(QLogger logger:loggers){	
+						((QDelegatedLogTemplate) logTemplate).getDelegate().setQLogger(logger);
+						result.add(logTemplate);
+					}
+				}else{
+					for(QLogger logger:loggers){	
+						logTemplate.setQLogger(logger);
+						result.add(logTemplate);
+					}
+				}
+			}
+		}
+		
 		return result;
 	}
 
-	private Collection<LogTemplate<Meter>> getMeterLogTemplates(Meter meter){
-		Collection<LogTemplate<Meter>> result=new ArrayList<LogTemplate<Meter>>();
-		for(String name: configuration.keySet()){
-			if(configuration.get(name).accept(meter)){
-				result.add(meterLogTemplates.get(name));
+	
+	private Collection<LogTemplate<Split>> getStopwatchLogTemplates(Stopwatch stopwatch) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	private Collection<QLogTemplate<Counter>> getCounterLogTemplates(Counter counter) {
+		
+		Collection<QLogTemplate<Counter>> result=new ArrayList<QLogTemplate<Counter>>();
+		Collection<QLogger> loggers=new ArrayList<QLogger>();
+		getLoggers(counter, loggers);
+		//System.out.printf("logger size:%d\n", loggers.size());
+		
+		for(QLoggerFilter filter: couterTemplates.keySet()){
+			if(filter.accept(counter)){
+				QLogTemplate<Counter> logTemplate=couterTemplates.get(filter);
+				if(logTemplate instanceof QDelegatedLogTemplate<?>){
+					for(QLogger logger:loggers){	
+						((QDelegatedLogTemplate) logTemplate).getDelegate().setQLogger(logger);
+						result.add(logTemplate);
+					}
+				}else{
+					for(QLogger logger:loggers){	
+						logTemplate.setQLogger(logger);
+						result.add(logTemplate);
+					}
+				}
 			}
 		}
-		//System.out.printf("size:%d\n",result.size());
+		
+		
+		
 		return result;
 	}
+
 	
-	private Collection<LogTemplate<Counter>> getCounterLogTemplates(Counter counter){
-		Collection<LogTemplate<Counter>> result=new ArrayList<LogTemplate<Counter>>();
-		for(String name: configuration.keySet()){
-			if(configuration.get(name).accept(counter)){
-				result.add(counterLogTemplates.get(name));
+	
+	
+	private void getLoggers(Simon simon,Collection<QLogger> loggers){
+		
+		for(QLoggerFilter filter: filterLoggers.keySet()){
+			if(filter.accept(simon)){
+				loggers.add(filterLoggers.get(filter));
 			}
 		}
-		return result;
 	}
 	
-	
-	
-	
-	@Override
-	public void onStopwatchStop(Split split, StopwatchSample sample) {
-		for(LogTemplate<Split> logTemplate: getStopwatchLogTemplates(split.getStopwatch())){
-			logTemplate.log(split, stopwatchLogMessageSource);
-		}
-	}
-	
-	
+
 	@Override
 	public void onMeterIncrease(Meter meter, long inc, MeterSample sample){
 		for(LogTemplate<Meter> logTemplate: getMeterLogTemplates(meter)){
-//			if(logTemplate==null){
-//				System.out.printf("not existing logTempalte");
-//			}
-			logTemplate.log(meter, meterLogMessageSource);
+			logTemplate.log(meter, LoggingMessageSourceFactory.meterLogMessageSource);
 		}
 	}
 	
+	@Override 
+	public void onMeterDecrease(Meter meter, long inc, MeterSample paramMeterSample) {
+		for(QLogTemplate<Meter> logTemplate: getMeterLogTemplates(meter)){
+			if(logTemplate!=null){
+				logTemplate.log(meter, LoggingMessageSourceFactory.meterLogMessageSource);
+			}
+		}
+	};
+	
 	@Override
 	public void onCounterIncrease(Counter counter, long inc, CounterSample sample){
-		for(LogTemplate<Counter> logTemplate: getCounterLogTemplates(counter)){
-			logTemplate.log(counter, counterLogMessageSource);
+		for(QLogTemplate<Counter> logTemplate: getCounterLogTemplates(counter)){
+			if(logTemplate!=null){
+				logTemplate.log(counter,LoggingMessageSourceFactory.counterLogMessageSource );
+			}
 		}
 	}
 	
 	
 	@Override
 	public void onCounterDecrease(Counter counter, long inc, CounterSample sample){
-		for(LogTemplate<Counter> logTemplate: getCounterLogTemplates(counter)){
-			logTemplate.log(counter, counterLogMessageSource);
+		for(QLogTemplate<Counter> logTemplate: getCounterLogTemplates(counter)){
+			if(logTemplate!=null){
+				logTemplate.log(counter, LoggingMessageSourceFactory.counterLogMessageSource);
+			}
+		}
+	}
+
+	
+	@Override
+	public void onStopwatchStop(Split split, StopwatchSample sample) {
+		for(LogTemplate<Split> logTemplate: getStopwatchLogTemplates(split.getStopwatch())){
+			if(logTemplate!=null){
+				logTemplate.log(split, LoggingMessageSourceFactory.stopwatchLogMessageSource);
+			}
 		}
 	}
 	

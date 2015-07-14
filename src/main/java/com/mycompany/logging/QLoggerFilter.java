@@ -22,6 +22,11 @@ public class QLoggerFilter {
 		this("Default", WILD_START, WILD_START);
 	}
 	
+//	public static QLoggerFilter ALLACCEPT(){
+//		return null;
+//	}
+	
+	
 	public QLoggerFilter(String name,String namePattern,String typePattern){
 		this.name=name;
 		this.namePattern=new NameExpr(namePattern);
@@ -49,7 +54,7 @@ public class QLoggerFilter {
 	public void setName(String name){
 		this.name=name;
 	}
-	
+
 	public void setNamePattern(String namePattern){
 		this.namePattern=new NameExpr(namePattern);
 	}
@@ -59,8 +64,24 @@ public class QLoggerFilter {
 	}
 	
 	public boolean accept(Simon simon){
+		
+		//if(name.equals("Default"))
+		
 		return namePattern.accept(simon) && typePattern.accept(simon);
 	}
 	
+	
+	@Override
+	public boolean equals(Object other){
+		boolean result = false;
+	    if(other instanceof QLoggerFilter){
+	    	QLoggerFilter that=(QLoggerFilter) other;
+	    	if(that.toString().equals(this.toString())){
+	    		result=true;
+	    	}
+
+	    }
+	    return result;
+	}
 
 }

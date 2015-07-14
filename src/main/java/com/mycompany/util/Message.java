@@ -20,7 +20,7 @@ import java.util.Map;
 public class Message {
 	
 	private Map<String,String> simonInfo=new HashMap<String,String>();
-	
+	//private 
 	
 	
 	public Message(){
@@ -90,5 +90,6 @@ public class Message {
 	public String getContent(){
 		return simonInfo.toString();
 	}
+	
 
 }
